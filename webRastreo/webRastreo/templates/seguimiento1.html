@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %} Track on-line {% endblock %}
+{% block content %}
+
+{% if mensaje != "." %}
+    {{ mensaje }}
+{% endif %}
+
+
+
+<form method="POST" action="">
+  {% csrf_token %}
+
+    <div>
+        <ol>
+
+              {% for x in lista %}
+                    <li  class="tablas"> {{ x.user }} :  <input type="radio" name="checkbox"  value="{{ x.user.email }}"> </li>
+              {% endfor %}
+
+
+        </ol>
+
+    </div>
+  <input type="submit" value="Localizar On-Line" />
+</form>
+
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %} GeoLocalizacion {% endblock %}
+{% block content %}
+
+<H4>Cuenta actual a la cual se asociaran o desasociaran: {{ UsuarioActual.user}}</H4>
+
+{% if mensaje != "." %}
+    {{ mensaje }}
+
+{% else %}
+
+
+<form method="POST" action="">
+  {% csrf_token %}
+
+    <div >
+
+        <ol>
+
+
+            {% for x in lista %}
+                {% if x.user != UsuarioActual.user %}
+
+                     <li class="tablas">   {{ x.user }} : <input type="checkbox" name="checkbox"  value="{{ x.id }}"> Asociar </li>
+                {% endif %}
+            {% endfor %}
+
+ </ol>
+    </div>
+  <input type="hidden" name="empresa"  value="{{ empre }}">
+  <input type="submit" value="Asociar Cuentas" />
+</form>
+
+
+{% endif %}
+
+{% endblock %}

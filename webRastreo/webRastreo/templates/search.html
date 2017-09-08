@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %} ways {% endblock %}
+
+
+{% block content %}
+
+{% if mensaje != "." %}
+    {{ mensaje }}
+{% endif %}
+
+<div class="ocultos">
+<form method="POST" action="."  enctype="multipart/form-data">
+  {% csrf_token %}
+
+
+
+
+              {% for x in lista %}
+                   <div>   {{ x.user }} : <input type="radio" name="checkbox"  value="{{ x.user.email }}"> Localizar</div><br>
+              {% endfor %}
+
+            <div> <strong> Fecha Inicio de Busqueda :</strong> {{ form.diaInicio }}
+            {{ form.mesInicio }} {{ form.anoInicio }}  </div>
+            <div> <strong> Desde la hora : </strong> {{ form.horaInicio }}  {{ form.minutoInicio }} </div> <br>
+            <div><strong> Fecha Fin de Busqueda : </strong> {{ form.diaFin }}
+            {{ form.mesFin }} {{ form.anoFin }}</div>
+              <div><strong> Hasta la hora : </strong> {{ form.horaFin }}  {{ form.minutoFin }}  </div><br>
+             <div><strong> Informar distancia total recorrida en km: </strong> {{ form.Distancia }}</div>
+            {% if distanciaTotal != "." %}
+                <h3> Distancia Total Aproximada Recorrida: {{ distanciaTotal }} Km </h3>
+            {% endif %}
+
+
+  <input type="submit" value="To Show" />
+
+</form>
+
+</div>
+
+<style>
+      .map:-moz-full-screen {
+        height: 100%;
+      }
+      .map:-webkit-full-screen {
+        height: 100%;
+      }
+      .map:-ms-fullscreen {
+        height: 100%;
+      }
+      .map:fullscreen {
+        height: 100%;
+      }
+      .ol-rotate {
+        top: 3em;
+      }
+      .map {
+        height: 700px;
+        width: 100%;
+      }
+    </style>
+
+    <div id="map" class="map"></div>
+
+<form>
+    <input type="button" value="Print Page" onClick="window.print()">
+</form>
+<form>
+    <input type="button" value="Save KML" onClick="llamarkml()">
+</form>
+    <a id="export-png" class="btn btn-default"><i class="fa fa-download"></i> Download PNG</a>
+<div class="imagenMenu"></div>
+<script type="text/javascript">
+
+    var datos = "{{ dato }}";
+
+if(datos !== "" ) {
+var route = /** @type {ol.geom.LineString} */ (new ol.format.Polyline({
+        factor: 1e5
+      }).readGeometry( datos, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: 'EPSG:3857'
+      }));
+
+      var routeCoords = route.getCoordinates();
+      var routeLength = routeCoords.length;
+
+      var routeFeature = new ol.Feature({
+        type: 'route',
+        geometry: route
+      });
+
+var geoMarker = new ol.Feature({
+  type: 'geoMarker',
+  geometry: new ol.geom.Point(routeCoords[0])
+});
+var startMarker = new ol.Feature({
+  type: 'icon',
+  geometry: new ol.geom.Point(routeCoords[0])
+});
+var endMarker = new ol.Feature({
+  type: 'icon',
+  geometry: new ol.geom.Point(routeCoords[routeLength - 1])
+});
+
+var styles = {
+  'route': new ol.style.Style({
+    stroke: new ol.style.Stroke({
+      width: 6, color: '#ffcc33'
+    })
+  }),
+  'icon': new ol.style.Style({
+    image: new ol.style.Icon({
+      anchor: [0.5, 1],
+       src: "/media/images/16471.png",
+    })
+  }),
+  'geoMarker': new ol.style.Style({
+    image: new ol.style.Circle({
+      radius: 7,
+      snapToPixel: false,
+      fill: new ol.style.Fill({color: 'black'}),
+      stroke: new ol.style.Stroke({
+        color: 'red', width: 2
+      })
+    })
+  })
+};
+
+
+
+var vectorLayer = new ol.layer.Vector({
+        source: new ol.source.Vector({
+          features: [routeFeature, geoMarker, startMarker, endMarker]
+        }),
+        style: function(feature) {
+          // hide geoMarker if animation is active
+
+          return styles[feature.get('type')];
+        }
+      });
+
+     var map = new ol.Map({
+        layers: [
+           new ol.layer.Tile({
+            source: new ol.source.OSM()
+          }),
+
+            /*  gjsonFile,  */
+              vectorLayer
+        ],
+        target: 'map',
+
+        view: new ol.View({
+          center: ol.proj.fromLonLat([-4.16, 40.57]),
+          zoom: 6,
+          maxZoom: 16
+        }),
+          controls: new ol.control.defaults({
+          attribution: false,
+         })
+      });
+
+       var source = new ol.source.Vector({
+        wrapX: false
+      });
+      var vector = new ol.layer.Vector({
+        source: source
+      });
+      map.addLayer(vector);
+
+     var x = parseFloat("{{ puntitox }}");
+     var y = parseFloat("{{ puntitoy }}");
+     var geom = new ol.geom.Point(ol.proj.transform([ y, x], 'EPSG:4326', 'EPSG:3857'));
+
+      var feature = new ol.Feature(geom);
+      source.addFeature(feature);
+
+
+} else {
+
+     var map = new ol.Map({
+       layers: [
+          new ol.layer.Tile({
+            source: new ol.source.OSM()
+          })],
+        target: 'map',
+
+        view: new ol.View({
+          center: ol.proj.fromLonLat([-4.16, 40.57]),
+          zoom: 6,
+          maxZoom: 16
+        }),
+          controls: new ol.control.defaults({
+          attribution: false,
+         })
+      });
+}
+
+
+function llamarkml()
+{
+
+    screen = new Ajax.Request('/maps/CrearKML2/', {
+        method: 'get',
+        onSuccess: function(id) {
+
+            var cor = id;
+
+            var archivo = cor["responseText"];
+
+            descargarArchivo2(archivo);
+
+
+        }
+    });
+}
+
+function descargarArchivo2(archivo)
+{
+
+// grab the content of the form field and place it into a variable
+    var textToWrite = archivo;
+//  create a new Blob (html5 magic) that conatins the data from your form feild
+    var textFileAsBlob = new Blob([textToWrite], {type:'text/plain'});
+// Specify the name of the file to be saved
+    var fileNameToSaveAs = "myNewFile.txt";
+
+// Optionally allow the user to choose a file name by providing
+// an imput field in the HTML and using the collected data here
+// var fileNameToSaveAs = txtFileName.text;
+
+// create a link for our script to 'click'
+    var downloadLink = document.createElement("a");
+//  supply the name of the file (from the var above).
+// you could create the name here but using a var
+// allows more flexability later.
+    downloadLink.download = fileNameToSaveAs;
+// provide text for the link. This will be hidden so you
+// can actually use anything you want.
+    downloadLink.innerHTML = "My Hidden Link";
+
+// allow our code to work in webkit & Gecko based browsers
+// without the need for a if / else block.
+    window.URL = window.URL || window.webkitURL;
+
+// Create the link Object.
+    downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+// when link is clicked call a function to remove it from
+// the DOM in case user wants to save a second file.
+    downloadLink.onclick = destroyClickedElement;
+// make sure the link is hidden.
+    downloadLink.style.display = "none";
+// add the link to the DOM
+    document.body.appendChild(downloadLink);
+
+// click the new link
+    downloadLink.click();
+}
+
+function destroyClickedElement(event)
+{
+// remove the link from the DOM
+    document.body.removeChild(event.target);
+}
+
+/*Esta parte genera el PNG del mapa */
+    document.getElementById('export-png').addEventListener('click', function() {
+        map.once('postcompose', function(event) {
+          var canvas = event.context.canvas;
+          if (navigator.msSaveBlob) {
+            navigator.msSaveBlob(canvas.msToBlob(), 'map.png');
+          } else {
+            canvas.toBlob(function(blob) {
+              saveAs(blob, 'map.png');
+            });
+          }
+        });
+        map.renderSync();
+      });
+
+
+    </script>
+
+{% endblock %}
+

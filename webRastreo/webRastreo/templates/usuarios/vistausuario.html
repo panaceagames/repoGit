@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %} GeoLocalizacion {% endblock %}
+{% block content %}
+
+<br>
+<div class="row">
+    <div class="span5">
+        <p> Empresa: {{ empresa }} </p>
+<table class="table table-bordered">
+    <tbody>
+        <tr>
+            <li> Usuario : {{ usuarioActual.user }} </li>
+            <li> Empresa : {{ empresa }} </li>
+            <li> Rubro: {{ usuarioActual.Rubro }} </li>
+            <li> Cantidad de Abonos : {{ usuarioActual.Abonos }} </li>
+            <li> Email de Rastreo: {{ usuarioActual.user.email }} </li>
+            <li> Email de Contacto: {{ usuarioActual.Email_Alternativo_de_Contacto }} </li>
+            <li> Descripcion: {{ usuarioActual.Descripcion_corta }} </li>
+            <li> Tipo de Cuenta: {{ usuarioActual.Tipo_Cuenta }} </li>
+            <li> Direccion: {{ usuarioActual.Direccion }} </li>
+            <li> Telefono: {{ usuarioActual.Telefono }} </li>
+            <li> Telefono_Contacto: {{ usuarioActual.Telefono_Contacto }} </li>
+            <li> Nombre de Contacto: {{ usuarioActual.Nombre_Contacto }} </li>
+            <li> Descripcion: {{ usuarioActual.Descripcion_corta }} </li>
+            <li> Asociado a Cuenta: {{ usuarioActual.Asociado_A_Cuenta }} </li>
+            <li> Cuenta Activa: {{ usuarioActual.Cuenta_Activa }} </li>
+
+        </tr>
+    </tbody>
+</table>
+
+    </div>
+
+ <!--   <div class="span5">
+        <a href="/DatosPersonales/{{ usuarioActual.id }}/"></a>
+    </div>
+-->
+</div>
+<br>
+{% if user.is_authenticated %}
+    <td><a class="btn btn-primary" href="/EditarDatos/{{ usuarioActual.id }}/"><i class="icon-pencil"></i>Editar</a></td>
+{% endif %}
+{% if user.is_authenticated %}
+    <td><a class="btn btn-primary" href="/AsociarCuentas/{{ usuarioActual.id }}/"><i class="icon-pencil"></i>Agregar Cuentas</a></td>
+{% endif %}
+
+
+
+{% endblock %}

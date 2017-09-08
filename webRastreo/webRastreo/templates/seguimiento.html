@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %} Track on-line {% endblock %}
+{% block content %}
+<body onLoad="init()">
+ <style>
+      .map:-moz-full-screen {
+        height: 100%;
+      }
+      .map:-webkit-full-screen {
+        height: 100%;
+      }
+      .map:-ms-fullscreen {
+        height: 100%;
+      }
+      .map:fullscreen {
+        height: 100%;
+      }
+      .ol-rotate {
+        top: 3em;
+      }
+      .map {
+        height: 700px;
+        width: 100%;
+      }
+    </style>
+
+    <div id="map" class="map" ></div>
+    <script type="text/javascript">
+
+     var map = new ol.Map({
+        layers: [
+          new ol.layer.Tile({
+            source: new ol.source.OSM()
+          }),
+            /*  gjsonFile,
+              vectorLayer */
+        ],
+        target: 'map',
+        view: new ol.View({
+          center: ol.proj.fromLonLat([{{ long }}, {{ lat }}]),
+          zoom: 13,
+          maxZoom: 16
+        }),
+          controls: new ol.control.defaults({
+          attribution: false,
+         }).extend([
+          new ol.control.FullScreen()
+        ]),
+      });
+
+       var source = new ol.source.Vector({
+        wrapX: false
+      });
+      var vector = new ol.layer.Vector({
+        source: source
+      });
+      map.addLayer(vector);
+
+function updateMarkers(lat, long) {
+     var x = parseFloat(lat);
+     var y = parseFloat(long);
+     var geom = new ol.geom.Point(ol.proj.transform([ y, x], 'EPSG:4326', 'EPSG:3857'));
+     var feature = new ol.Feature(geom);
+     source.addFeature(feature);
+
+}
+
+
+function init()
+{
+new Ajax.PeriodicalUpdater('dirtcount', '/maps/dirt_count/{{ lista }}', {
+        method: 'get',frequency:10.0,decay:1,onSuccess: function(id) {
+
+            var cor = id;
+            console.log(cor["responseText"]);
+            var lat = cor["responseJSON"][0][0];
+            var long = cor["responseJSON"][0][1];
+
+            updateMarkers(lat, long);
+        }
+    });
+}
+
+  /*           map.setView(new ol.View({
+                projection: 'EPSG:4326',
+                center: [long, lat], //long,lat
+                zoom: 8
+            })); */
+    </script>
+
+
+{% endblock %}

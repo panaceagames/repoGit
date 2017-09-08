@@ -1,0 +1,52 @@
+@charset "UTF-8";
+/* CSS Document */
+
+.ocultos {
+    background-color: SkyBlue;
+
+    padding: 0px;
+    margin: 0px;
+    border: 5px double;
+    position: fixed;
+    left: -470px;
+    top: 15%;
+    width: 500px;
+    z-index: 66;
+    cursor: pointer;
+    background-image: url("/media/images/izquierda.png");
+    background-position: right center;
+    background-position-x: right;
+    background-position-y: center;
+    background-repeat: no-repeat;
+    transition: transform 2s ease-in-out 0s;
+}
+
+.ocultos:hover {
+    transform: translate(100%);
+}
+
+.tablas {
+    padding: 15px;
+    }
+
+article {
+     height: 200px;
+    width: 200px;
+    border: 2px solid red;
+    margin: 50px;
+    }
+
+.imagenMenu {
+    cursor: pointer;
+    background-image: url("/media/images/izquierda.png");
+    background-position: right center;
+    background-position-x: right;
+    background-position-y: center;
+    background-repeat: no-repeat;
+    z-index: 665;
+
+    }
+
+input:focus {
+    background-color: yellow;
+}
