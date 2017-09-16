@@ -39,9 +39,8 @@
 <br>
 {% if user.is_authenticated %}
     <td><a class="btn btn-primary" href="/EditarDatos/{{ usuarioActual.id }}/"><i class="icon-pencil"></i>Editar</a></td>
-{% endif %}
-{% if user.is_authenticated %}
     <td><a class="btn btn-primary" href="/AsociarCuentas/{{ usuarioActual.id }}/"><i class="icon-pencil"></i>Agregar Cuentas</a></td>
+    <td><a class="btn btn-primary" href="/ResetPassword/{{ usuarioActual.id }}/"><i class="icon-pencil"></i>Cambiar Password</a></td>
 {% endif %}
 
 

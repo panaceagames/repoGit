@@ -31,9 +31,16 @@ def search(request):
                         datosListos2 = ""
                     user = request.user
                     lista = CuentaAsociadas(user)
+                    datosIniciales = CrearPointSeguimiento(usuarioTrasar) #da los datos para el zoom inicial
+                    try: #para que no de error si el usuario en nuevo y no tiene recorridos
+                        y = datosIniciales[0][0]
+                        x = datosIniciales[0][1]
+                    except:
+                        x = ""
+                        y = ""
                     if datosss['Distancia'] == False:
                         distanciaTotal = "."
-                    ctx = {'form': form, "lista": lista, "mensaje": mensaje,  "dato": datosListos2, "distanciaTotal": distanciaTotal}
+                    ctx = {'form': form, "lista": lista, "long": x, "lat": y, "usuarioMostrado": usuarioTrasar, "mensaje": mensaje,  "dato": datosListos2, "distanciaTotal": distanciaTotal}
                     return render(request,'search.html', ctx)
                 else:
                     user = request.user
@@ -80,12 +87,12 @@ def CrearListaPoint(datosListos): #trae los puntos para el polyline y suma la di
     kml1 = simplekml.Kml()
     hh = []
     distance22 = 0
+    distanciatotal = 0
     try:
         traso = Location.objects.filter(email=datosListos["Cuenta"])
         traso1 = traso.filter(fecha2__gte=datosListos["inicial"])
         traso2 = traso1.filter(fecha2__lte=datosListos["finales"])
         tres = []
-        print  (traso2[0].point)
         v = traso2[0].point.x
         b = traso2[0].point.y
         p1 = Point(v, b)
@@ -96,12 +103,11 @@ def CrearListaPoint(datosListos): #trae los puntos para el polyline y suma la di
             hh.append((b,v))
             if distance22 > 10:
                 p2 = Point(v, b)
-                distanciatotal = p1.distance(p2)
+                distanciatotal += p1.distance(p2)
                 p1 = Point(v, b)
                 distance22 = 0
             distance22= distance22 +1
         distanciatotal = distanciatotal * 100
-        print (distanciatotal)
         kml1.newlinestring(name="AFTrakers", description="--", coords=hh)
         kml1.save(datosListos["Cuenta"]+".kml")
     except:
@@ -109,11 +115,10 @@ def CrearListaPoint(datosListos): #trae los puntos para el polyline y suma la di
         distanciatotal = 0
     return tres, distanciatotal
 
-def CrearKML2(request):  #Busca el archivo KML generado al ver el recorrido y lo envia al template para descarga
+def CrearKML2(request, usuarioMostrado):  #Busca el archivo KML generado al ver el recorrido y lo envia al template para descarga
     if request.user.is_authenticated():
         if (request.method == 'GET'):
-            lista = userProfile.objects.get(user=request.user)
-            email = lista.user.email
+            email = usuarioMostrado
             archivo = open(email+".kml", "r")
             contenido = archivo.read()
             archivo.close()
@@ -146,8 +151,15 @@ def Seguimiento_view(request): #muestra la lista de posibles cuentas a localizar
                 if (len(lista) != 0):
                     lista = lista[0]
                     datosIniciales = CrearPointSeguimiento(lista) #da los datos para el zoom inicial
-                    y = datosIniciales[0][0]
-                    x = datosIniciales[0][1]
+                    try: #chequeamos si es nuevo usuario y nunca a reportado salta la exception con el mensaje
+                        y = datosIniciales[0][0]
+                        x = datosIniciales[0][1]
+                    except:
+                        mensaje= "El usuario no a reportado"
+                        user = request.user
+                        lista = CuentaAsociadas(user)
+                        ctx = {"lista": lista, "mensaje": mensaje }
+                        return render(request, 'seguimiento1.html', ctx)
                     ctx = {"lista": lista, "mensaje": mensaje, "long": x, "lat": y }
                     return render(request, 'seguimiento.html', ctx)
         user = request.user
@@ -157,7 +169,7 @@ def Seguimiento_view(request): #muestra la lista de posibles cuentas a localizar
     else:
         return HttpResponseRedirect('/')
 
-def dirt_count(request, lista):  #funcion para el restreo en vivo de un user
+def dirt_count(request, lista):  #funcion para el restreo en vivo de un user la usa JScript
     if request.user.is_authenticated():
         if (request.method == 'GET'):
             print("dentro")
