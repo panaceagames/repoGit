@@ -26,9 +26,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'gu-lk&m19e7%&t@d_s^^+2atdu9aa)o5j*zo*4jqd=re-kcw8j'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -85,7 +85,7 @@ DATABASES = {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': 'testgis_db3',
         'USER': 'testgis_user',
-        'PASSWORD': '1234',
+        'PASSWORD': 'Rufus1210',
         'HOST': 'localhost',
     }
 }
@@ -128,12 +128,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
-
+STATIC_ROOT = "/home/web/repoGit/webRastreo/webRastreo/static"
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 #MEDIA_ROOT = os.path.join(os.path.dirname(__file__),'media\\').replace("/","\\")
 #MEDIA_ROOT = "C:\\Users\\Administrator\\virtual\\cdrAsterbox\\src\\webAsterbox\\webAsterbox\\media\\"
-MEDIA_ROOT = "/home/juan/virtuales/webRastreo/webRastreo/webRastreo/media/"
+MEDIA_ROOT = "/home/web/repoGit/webRastreo/webRastreo/media/"
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -159,10 +159,10 @@ EMAIL_USE_TLS = True
 AUTH_PROFILE_MODULE = 'clientes.userProfile'
 
 #Si quieres que la sesión expire pasado cierto tiempo después de que el usuario hace login, inicializa la variable SESSION_COOKIE_AGE en el settings.py:
-#SESSION_COOKIE_AGE = 3600
+SESSION_COOKIE_AGE = 600
 
 # Si quieres que la sesión expire una vez que el usuario cierre el navegador, inicializa la variable SESSION_EXPIRE_AT_BROWSER_CLOSE en el settings.py:
-#SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 """
 #como saber si un usuario esta en linea con django.
 

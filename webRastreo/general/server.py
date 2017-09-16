@@ -25,7 +25,7 @@ class MiTcpHandler(socketserver.BaseRequestHandler):
         data="salir"
         hostname_postgre = 'localhost'
         username_postgre = 'testgis_user'
-        password_postgre = '1234'
+        password_postgre = 'Rufus1210'
         database_postgre = 'testgis_db3'
 
         try: #corta el hilo si no se puede conectar a la base de datos
@@ -69,6 +69,8 @@ class MiTcpHandler(socketserver.BaseRequestHandler):
         except:
             print ("unable to connect to the database o anterior")
             data = "salir"
+        print("entrada de datos")
+        print(finallogin)
         if len(finallogin) != 2:
             while data != "salir":
                 try:
