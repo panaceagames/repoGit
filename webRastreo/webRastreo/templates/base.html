@@ -59,6 +59,9 @@
                 <li><a href="{% url 'vista_ClientesGeneral' %}">Cuentas</a></li>
             <li><a href="{% url 'search_views' %}">Recorridos</a></li>
             <li><a href="{% url 'Seguimiento_view' %}">Seguimiento</a></li>
+            {% if request.user.is_superuser %}
+                <li><a href="{% url 'vista_CrearEmpresas' %}">Empresas</a></li>
+            {% endif %}
           </ul>
 
           <ul class="nav navbar-nav navbar-right">

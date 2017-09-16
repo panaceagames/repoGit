@@ -42,8 +42,6 @@ class userProfile(models.Model):
     user = models.OneToOneField(User, unique=True)
     Empresa = models.ManyToManyField(_empresas)
     Rubro = models.CharField(max_length=40, blank=True, null=True)
-    #al registrar pide mail y con eso controla que no se registren repetidos los users.
-  #  Email = models.EmailField(max_length=60, blank=True, null=True)
     Email_Alternativo_de_Contacto = models.EmailField(max_length=60, blank=True, null=True)
     Direccion = models.CharField(max_length=60, blank=True, null=True)
     Telefono = models.CharField(max_length=15, blank=True, null=True)
@@ -51,8 +49,7 @@ class userProfile(models.Model):
     Nombre_Contacto = models.CharField(max_length=30, blank=True, null=True)
     Abonos = models.CharField(max_length=4, blank=True, null=True)
     Descripcion_corta = models.TextField(max_length=500, null=True, blank=True)
-    Tipo_Cuenta = models.CharField(max_length=30, choices=_TipoCuenta, blank=True, null=True)
-   # Cuentas_Asociadas = models.ManyToManyField(Cuentas, blank=True, null=True)
+    Tipo_Cuenta = models.CharField(max_length=30, choices=_TipoCuenta, default='Individual', blank=True, null=True)
     Asociado_A_Cuenta = models.CharField(max_length=30, null=True, blank=True)
     creacion = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     Cuenta_Activa = models.BooleanField(default=False)

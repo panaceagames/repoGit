@@ -11,5 +11,7 @@ urlpatterns = [
     url(r'^DatosPersonales/(?P<id_user>.*)/$', views.singleUser_view, name='vista_user'),
     url(r'^EditarDatos/(?P<id_user>.*)/$',views.edit_user_view, name='vista_edit_user'),
     url(r'^AsociarCuentas/(?P<id_user>.*)/$',views.AsociarCuentas_view, name='vista_AsociarCuentas'),
+    url(r'^ResetPassword/(?P<id_user>.*)/$',views.ResetPassword_view, name='vista_ResetPassword'),
+    url(r'^Empresas/$', views.CrearEmpresas_view, name='vista_CrearEmpresas'),
 ]
 

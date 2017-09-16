@@ -3,8 +3,8 @@ from django.shortcuts import render
 # Create your views here.
 from django.contrib.auth import login, logout, authenticate
 from django.http import HttpResponseRedirect
-from .forms import LoginForm, RegisterForm, editUserForm, editUserFormIndividuales
-from .models import userProfile
+from .forms import LoginForm, RegisterForm, editUserForm, editUserFormIndividuales, RegisterFormTarget, PasswordReset, FormEmpresas
+from .models import userProfile, _empresas
 from django.contrib.auth.models import User
 
 #loguea al usuario y redirige acorde a sus permisos el admin y solo users
@@ -39,30 +39,81 @@ def logout_view(request):  #logout del user
 
 #@login_required
 def register_view(request): #nuevo usuario primera etapa
-    if request.user.is_authenticated():
-        form = RegisterForm()
-        if request.method == 'POST':
-            form = RegisterForm(request.POST)
-            if form.is_valid():
-                usuario = form.cleaned_data['username']
-                email = form.cleaned_data['email']
-                password_one = form.cleaned_data['password_one']
-                password_two = form.cleaned_data['password_two']
-                u = User.objects.create_user(username=usuario, email=email, password=password_one)
-                u.save()
-                ff = userProfile(user=u)
-                ff.save()
-                UsuarioNuevo = User.objects.get(username=usuario)
-                #le resto uno porque nose porque me los toma con un id menos hay que revisar
-                numero_id = UsuarioNuevo.id - 1
-                return HttpResponseRedirect('/EditarDatos/%s'%numero_id)
-            else:
+    if request.user.is_authenticated() and request.user.is_superuser:
+        UsuarioEnSesion = userProfile.objects.get(user=request.user) #usuario con la sesion abierta
+        if (UsuarioEnSesion.Tipo_Cuenta == "Admin"):
+            if request.method == 'POST':
                 form = RegisterForm(request.POST)
+                if form.is_valid():
+                    usuario = form.cleaned_data['username']
+                    email = form.cleaned_data['email']
+                    password_one = form.cleaned_data['password_one']
+                    password_two = form.cleaned_data['password_two']
+                    Rubro = form.cleaned_data['Rubro']
+                    Email_Alternativof = form.cleaned_data['Email_Alternativo_de_Contacto']
+                    Direccionf = form.cleaned_data['Direccion']
+                    Telefonof = form.cleaned_data['Telefono']
+                    Telefono_Contactof = form.cleaned_data['Telefono_Contacto']
+                    Nombre_Contactof = form.cleaned_data['Nombre_Contacto']
+                    Abonosf = form.cleaned_data['Abonos']
+                    Descripcion_cortaf = form.cleaned_data['Descripcion_corta']
+                    Asociado_A_Cuentaf = form.cleaned_data['Asociado_A_Cuenta']
+                    Tipo_Cuentaf = form.cleaned_data['Tipo_Cuenta']
+                    EmpresaDefault = form.cleaned_data['Empresa']
+                    u = User.objects.create_user(username=usuario, email=email, password=password_one)
+                    u.save()
+                    ff = userProfile(user=u, Rubro=Rubro, Email_Alternativo_de_Contacto=Email_Alternativof,
+                    Direccion=Direccionf, Telefono=Telefonof, Telefono_Contacto=Telefono_Contactof,
+                    Nombre_Contacto=Nombre_Contactof, Abonos=Abonosf, Descripcion_corta=Descripcion_cortaf,
+                    Tipo_Cuenta=Tipo_Cuentaf, Asociado_A_Cuenta=Asociado_A_Cuentaf)
+                    ff.save()
+                    ff.Empresa.add(EmpresaDefault)
+                    ff.save()
+                    return HttpResponseRedirect('/maps/seguimiento/')
+                else:
+                    form = RegisterForm(request.POST)
+                    ctx = {'form': form}
+                    return render(request, 'usuarios/register.html', ctx)
+            else:
+                form = RegisterForm()
                 ctx = {'form': form}
                 return render(request, 'usuarios/register.html', ctx)
         else:
-            ctx = {'form': form}
-            return render(request, 'usuarios/register.html', ctx)
+            if (UsuarioEnSesion.Tipo_Cuenta == "Cliente"): #chequea que solo si es de lamisma empresa pueda ver
+                if request.method == 'POST':
+                    form = RegisterFormTarget(request.POST)
+                    if form.is_valid():
+                        usuario = form.cleaned_data['username']
+                        email = form.cleaned_data['email']
+                        password_one = form.cleaned_data['password_one']
+                        password_two = form.cleaned_data['password_two']
+                        Rubro = form.cleaned_data['Rubro']
+                        Email_Alternativof = form.cleaned_data['Email_Alternativo_de_Contacto']
+                        Direccionf = form.cleaned_data['Direccion']
+                        Telefonof = form.cleaned_data['Telefono']
+                        Telefono_Contactof = form.cleaned_data['Telefono_Contacto']
+                        Nombre_Contactof = form.cleaned_data['Nombre_Contacto']
+                        Descripcion_cortaf = form.cleaned_data['Descripcion_corta']
+                        EmpresaDefault = UsuarioEnSesion.Empresa.all()[0]
+                        u = User.objects.create_user(username=usuario, email=email, password=password_one)
+                        u.save()
+                        ff = userProfile(user=u, Rubro=Rubro, Email_Alternativo_de_Contacto=Email_Alternativof,
+                        Direccion=Direccionf, Telefono=Telefonof, Telefono_Contacto=Telefono_Contactof,
+                        Nombre_Contacto=Nombre_Contactof, Descripcion_corta=Descripcion_cortaf)
+                        ff.save()
+                        ff.Empresa.add(EmpresaDefault)
+                        ff.save()
+                        return HttpResponseRedirect('/maps/seguimiento/')
+                    else:
+                        form = RegisterFormTarget(request.POST)
+                        ctx = {'form': form}
+                        return render(request, 'usuarios/register.html', ctx)
+                else:
+                    form = RegisterFormTarget()
+                    ctx = {'form': form}
+                    return render(request, 'usuarios/register.html', ctx)
+            else:
+                return HttpResponseRedirect('/')
     else:
         return HttpResponseRedirect('/')
 
@@ -121,31 +172,6 @@ def singleUser_view(request, id_user):   #vista datos de usuarios
             return render(request, 'usuarios/vistausuario.html', ctx)
         else:
             return HttpResponseRedirect('/')
-
-def target_register_view(request):
-    if request.user.is_authenticated():
-        form = RegisterForm()
-        if request.method == 'POST':
-            form = RegisterForm(request.POST)
-            if form.is_valid():
-                usuario = form.cleaned_data['username']
-                email = form.cleaned_data['email']
-                password_one = form.cleaned_data['password_one']
-                password_two = form.cleaned_data['password_two']
-                u = User.objects.create_user(username=usuario, email=email, password=password_one)
-                u.save()
-                ff = userProfile(user=u)
-                ff.save()
-                return render(request, 'usuarios/thanks_register.html')
-            else:
-                form = RegisterForm(request.POST)
-                ctx = {'form': form}
-                return render(request, 'usuarios/register.html', ctx)
-        else:
-            ctx = {'form': form}
-            return render(request, 'usuarios/register.html', ctx)
-    else:
-        return HttpResponseRedirect('/')
 
 
 def ClientesGeneral_view(request):
@@ -208,7 +234,6 @@ def AsociarCuentas_view(request, id_user):
                                     usuarioAsociar.Asociado_A_Cuenta = cliente.user.username
                         usuarioAsociar.save()
                         usuarioAsociar = ""
-
                 ctx = {"lista": Cuentas2}
                 return render(request,  'usuarios/ClientesGeneral.html', ctx)
             else:
@@ -230,4 +255,57 @@ def AsociarCuentas_view(request, id_user):
     else:
         return HttpResponseRedirect('/')
 
+def ResetPassword_view(request, id_user):
+    if request.user.is_authenticated():
+        try:
+            UsuarioEnSesion = userProfile.objects.get(user=request.user) #usuario con la sesion abierta
+            UsuarioActual = userProfile.objects.get(id=id_user)
+            if ((UsuarioEnSesion.Tipo_Cuenta == "Admin") or ((UsuarioEnSesion.Tipo_Cuenta == "Cliente") and (UsuarioEnSesion.Empresa.all()[0] == UsuarioActual.Empresa.all()[0]))):
+                ids = int(id_user) +1 #para buscar al usuario a modificar en user siempre tiene un id superior
+                UserActual = User.objects.get(id=ids)
+                if request.method == 'POST':
+                    form = PasswordReset(request.POST)
+                    if form.is_valid():
+                        password_one = form.cleaned_data['password_one']
+                        password_two = form.cleaned_data['password_two']
+                        UserActual.set_password(password_one)
+                        UserActual.save()
+                        return HttpResponseRedirect('/DatosPersonales/%s'%id_user)
+                    else:
+                        form = PasswordReset(request.POST)
+                        ctx = {'form': form}
+                        return render(request, 'usuarios/password_reset.html', ctx)
+                else:
+                    form = PasswordReset()
+                    ctx = {'form': form}
+                    return render(request, 'usuarios/password_reset.html', ctx)
+            else:
+                return HttpResponseRedirect('/')
+        except:
+            return HttpResponseRedirect('/')
+    else:
+        return HttpResponseRedirect('/')
 
+def CrearEmpresas_view(request):
+    if request.user.is_authenticated():
+        UsuarioEnSesion = userProfile.objects.get(user=request.user) #usuario con la sesion abierta
+        if (UsuarioEnSesion.Tipo_Cuenta == "Admin"):
+            lista = _empresas.objects.all()
+            if request.method == 'POST':
+                form = FormEmpresas(request.POST)
+                if form.is_valid():
+                    form.save()
+                    ctx = {"form":form, "lista":lista}
+                    return render(request, 'usuarios/empresas.html', ctx)
+                else:
+                    form = FormEmpresas(request.POST)
+                    ctx = {"form":form, "lista":lista}
+                    return render(request, 'usuarios/empresas.html', ctx)
+            else:
+                form = FormEmpresas()
+                ctx = {"form":form, "lista":lista}
+                return render(request, 'usuarios/empresas.html', ctx)
+        else:
+            return HttpResponseRedirect('/maps/seguimiento/')
+    else:
+        return HttpResponseRedirect('/')

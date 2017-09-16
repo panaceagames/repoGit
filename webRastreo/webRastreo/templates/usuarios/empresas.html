@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h3>Crear Nueva Empresa</h3>
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Crear Empresa</button>
+    </form>
+
+<div>
+    <h3> Empresas Actuales </h3>
+    <ol>
+        {% for x in lista %}
+               <li> {{ x  }} </li>
+        {% endfor %}
+    </ol>
+</div>
+{% endblock %}
