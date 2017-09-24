@@ -26,12 +26,15 @@ def search(request):
                     datosListos = manipularDatosBusqueda(datosss, usuarioTrasar)
                     datosListos1, distanciaTotal = CrearListaPoint(datosListos)
                     if (datosListos1 != "Usuario no existe"): #chequeamos que el usuario existio en la base antes del polilyne
-                        datosListos2 = CrearPolyline(datosListos1)
+                        datosListos2 = []
+                        for x in range(len(datosListos1)):
+                            datosListos2.append(CrearPolyline(datosListos1[x]))
+                        print(datosListos2)
                     else: #enviamos en blanco si el user no existe entonces solo muestra el mapa y no error
                         datosListos2 = ""
                     user = request.user
                     lista = CuentaAsociadas(user)
-                    datosIniciales = CrearPointSeguimiento(usuarioTrasar) #da los datos para el zoom inicial
+                    datosIniciales = CrearPointSeguimientoSearch(usuarioTrasar) #da los datos para el zoom inicial
                     try: #para que no de error si el usuario en nuevo y no tiene recorridos
                         y = datosIniciales[0][0]
                         x = datosIniciales[0][1]
@@ -85,35 +88,68 @@ def manipularDatosBusqueda(DicFormulario, usuarioTrasar):
 
 def CrearListaPoint(datosListos): #trae los puntos para el polyline y suma la distancia recorrida
     kml1 = simplekml.Kml()
-    hh = []
-    distance22 = 0
+    hh = [] # para las cordenadas de KML reveer si se puede cambiar para menos memoria
+    distance22 = 0 #control de cuenta kilometros
     distanciatotal = 0
+    lista = [] #lista a devolver con los recorridos
     try:
         traso = Location.objects.filter(email=datosListos["Cuenta"])
         traso1 = traso.filter(fecha2__gte=datosListos["inicial"])
         traso2 = traso1.filter(fecha2__lte=datosListos["finales"])
-        tres = []
-        v = traso2[0].point.x
-        b = traso2[0].point.y
-        p1 = Point(v, b)
-        for x in traso2:
-            v = x.point.x
-            b = x.point.y
-            tres.append((v, b))
-            hh.append((b,v))
-            if distance22 > 10:
-                p2 = Point(v, b)
-                distanciatotal += p1.distance(p2)
-                p1 = Point(v, b)
-                distance22 = 0
-            distance22= distance22 +1
-        distanciatotal = distanciatotal * 100
-        kml1.newlinestring(name="AFTrakers", description="--", coords=hh)
-        kml1.save(datosListos["Cuenta"]+".kml")
+        corteInicio = traso2.filter(InicioRecorrido="SI")
+        corteFin = traso2.filter(FinRecorrido="SI")
+        print (len(corteInicio))
+        print("separada")
+        if (len(corteInicio) == len(corteFin)):
+            for m in range(len(corteInicio)):
+                try:
+                    recorridos = traso2.filter(fecha2__gt=corteInicio[m].fecha2)
+                    print(corteInicio[m].fecha2)
+                    traso3 = recorridos.filter(fecha2__lt=corteFin[m].fecha2)
+                    tres = [] #para guardas cada recorrido antes de pasarlo a la lista
+                    v = traso3[0].point.x
+                    b = traso3[0].point.y
+                    p1 = Point(v, b)
+                    for x in traso3:
+                        v = x.point.x
+                        b = x.point.y
+                        tres.append((v, b))
+                        hh.append((b,v))
+                        if distance22 > 5:
+                            p2 = Point(v, b)
+                            distanciatotal += p1.distance(p2)
+                            p1 = Point(v, b)
+                            distance22 = 0
+                        distance22= distance22 +1
+                    distanciatotal = distanciatotal * 100
+                    kml1.newlinestring(name="AFTrakers", description="--", coords=hh)
+                    kml1.save(datosListos["Cuenta"]+".kml")
+                    lista.append(tres)
+                except:
+                    continue
+        else:
+            lista = "Usuario no existe"
+            print("no coninciden las aperturas con los cierres")
+        tres = lista
     except:
         tres = "Usuario no existe"
         distanciatotal = 0
+    print(lista)
     return tres, distanciatotal
+
+
+def CrearPointSeguimientoSearch(usuarioTest): #solo lo usa marcado de ruta para darle el zoom inicial
+    try:
+        x = Location.objects.filter(email=usuarioTest)  #[0]
+        cantidad = len(x)
+        x = x[cantidad -2]
+        v = x.point.x
+        b = x.point.y
+        tres = []
+        tres.append((v, b))
+    except:
+        tres = "Usuario no existe"
+    return tres
 
 def CrearKML2(request, usuarioMostrado):  #Busca el archivo KML generado al ver el recorrido y lo envia al template para descarga
     if request.user.is_authenticated():
@@ -130,7 +166,7 @@ def CrearPolyline(tres):
         uno = "\\"
         dos = "\\\\"
         ff = tresCodificada.replace(uno, dos) #remplaso las barras que me da error al representar la ruta en JS
-        print (ff)
+   #     print (ff)
     except:
         pass
     return ff
