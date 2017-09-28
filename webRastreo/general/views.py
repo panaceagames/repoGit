@@ -29,6 +29,14 @@ def search(request):
                         datosListos2 = []
                         for x in range(len(datosListos1)):
                             datosListos2.append(CrearPolyline(datosListos1[x]))
+                        m = ""
+                        for b in range(len(datosListos2)):
+                            if b == (len(datosListos2)-1): #esto se puso para mandar un string que se puede manipular con js
+                                m = m + datosListos2[b]
+                            else:
+                                if datosListos2[b] != "":
+                                    m = m + datosListos2[b] + ","
+                        datosListos2 = m
                         print(datosListos2)
                     else: #enviamos en blanco si el user no existe entonces solo muestra el mapa y no error
                         datosListos2 = ""
@@ -59,7 +67,6 @@ def search(request):
         else:
             form = Busqueda()
             form.fields["id_diaFin"] = '04'
-       #     print(form)
             user = request.user
             lista = CuentaAsociadas(user)
             ctx = {'form': form, "lista": lista, "mensaje": mensaje, "distanciaTotal": distanciaTotal }
@@ -98,13 +105,11 @@ def CrearListaPoint(datosListos): #trae los puntos para el polyline y suma la di
         traso2 = traso1.filter(fecha2__lte=datosListos["finales"])
         corteInicio = traso2.filter(InicioRecorrido="SI")
         corteFin = traso2.filter(FinRecorrido="SI")
-        print (len(corteInicio))
-        print("separada")
-        if (len(corteInicio) == len(corteFin)):
+        if (len(corteInicio) == len(corteFin)):  #Caso perdecto mismos inicios que finales marcados
             for m in range(len(corteInicio)):
                 try:
                     recorridos = traso2.filter(fecha2__gt=corteInicio[m].fecha2)
-                    print(corteInicio[m].fecha2)
+           #         print(corteInicio[m].fecha2)
                     traso3 = recorridos.filter(fecha2__lt=corteFin[m].fecha2)
                     tres = [] #para guardas cada recorrido antes de pasarlo a la lista
                     v = traso3[0].point.x
@@ -115,7 +120,7 @@ def CrearListaPoint(datosListos): #trae los puntos para el polyline y suma la di
                         b = x.point.y
                         tres.append((v, b))
                         hh.append((b,v))
-                        if distance22 > 5:
+                        if distance22 > 2:
                             p2 = Point(v, b)
                             distanciatotal += p1.distance(p2)
                             p1 = Point(v, b)
@@ -128,14 +133,48 @@ def CrearListaPoint(datosListos): #trae los puntos para el polyline y suma la di
                 except:
                     continue
         else:
-            lista = "Usuario no existe"
-            print("no coninciden las aperturas con los cierres")
-        tres = lista
+            if (len(corteInicio) != len(corteFin)): #casos especiales mas inicios que fin, puede quedar sin baterio o cualquier cosa que no deja
+                #marcar el fin del recorrido cortando el recorrido de inicio a inicio sin contar los finales
+                datos = traso2.filter(fecha2__gt=corteInicio[0].fecha2) #cargamos desde el primer dato de corte
+                tres = [] #para guardas cada recorrido antes de pasarlo a la lista
+                primero = True
+                for m in range(len(datos)):
+                    if ((datos[m].InicioRecorrido != "SI") and (datos[m].FinRecorrido != "SI")):
+                        v = datos[m].point.x
+                        b = datos[m].point.y
+                        if primero:
+                            p1 = Point(v, b)
+                            primero = False
+                        tres.append((v, b)) #guarda para la web
+                        hh.append((b,v)) #guarda para el KML
+                        if distance22 > 2:
+                            p2 = Point(v, b)
+                            distanciatotal += p1.distance(p2)
+                            p1 = Point(v, b)
+                            distance22 = 0
+                        distance22= distance22 +1
+                    else:
+                        if datos[m].InicioRecorrido == "SI":
+                            primero = True
+                            distanciatotal = distanciatotal * 100
+                            kml1.newlinestring(name="AFTrakers", description="--", coords=hh)
+                            kml1.save(datosListos["Cuenta"]+".kml")
+                            if tres != []: #es porque si hay un inicio y fin juntos no me genere una entrada vacia y de error
+                                lista.append(tres)
+                            tres = []
+    #chequeamos el ultimo dato si se corto con un fin o se desconecto o simplemente continio a un rango mayor lo corta en el criterio de busqueda
+                if ((datos[len(datos)-1].FinRecorrido == "SI") or (datos[len(datos)-1].InicioRecorrido == "ContI")):
+                    distanciatotal = distanciatotal * 100
+                    kml1.newlinestring(name="AFTrakers", description="--", coords=hh)
+                    kml1.save(datosListos["Cuenta"]+".kml")
+                    lista.append(tres)
+            else:
+                lista = "Usuario no existe 2"
+                print("no coninciden las aperturas con los cierres")
     except:
-        tres = "Usuario no existe"
+        lista = "Usuario no existe"
         distanciatotal = 0
-    print(lista)
-    return tres, distanciatotal
+    return lista, distanciatotal
 
 
 def CrearPointSeguimientoSearch(usuarioTest): #solo lo usa marcado de ruta para darle el zoom inicial
@@ -166,9 +205,8 @@ def CrearPolyline(tres):
         uno = "\\"
         dos = "\\\\"
         ff = tresCodificada.replace(uno, dos) #remplaso las barras que me da error al representar la ruta en JS
-   #     print (ff)
     except:
-        pass
+        ff = ""
     return ff
 
 

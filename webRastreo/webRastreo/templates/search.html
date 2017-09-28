@@ -70,14 +70,54 @@
 </form>
     <a id="export-png" class="btn btn-default"><i class="fa fa-download"></i> Download PNG</a>
 <div class="imagenMenu"></div>
+
 <script type="text/javascript">
 
     var datos = "{{ dato }}";
+    var uno = datos.split(",");
 
 if(datos !== "" ) {
+
+
+     var map = new ol.Map({
+        layers: [
+           new ol.layer.Tile({
+            source: new ol.source.OSM()
+          }),
+
+        ],
+        target: 'map',
+
+        view: new ol.View({
+          center: ol.proj.fromLonLat([{{ long }}, {{ lat }}]),
+          zoom: 11,
+          maxZoom: 16
+        }),
+          controls: new ol.control.defaults({
+          attribution: false,
+         })
+      });
+
+       var source = new ol.source.Vector({
+        wrapX: false
+      });
+      var vector = new ol.layer.Vector({
+        source: source
+      });
+      map.addLayer(vector);
+
+     var x = parseFloat("{{ puntitox }}");
+     var y = parseFloat("{{ puntitoy }}");
+     var geom = new ol.geom.Point(ol.proj.transform([ y, x], 'EPSG:4326', 'EPSG:3857'));
+
+      var feature = new ol.Feature(geom);
+      source.addFeature(feature);
+
+for (var f = 0; f < uno.length; f++) {
+
 var route = /** @type {ol.geom.LineString} */ (new ol.format.Polyline({
         factor: 1e5
-      }).readGeometry( datos, {
+      }).readGeometry( uno[f], {
         dataProjection: 'EPSG:4326',
         featureProjection: 'EPSG:3857'
       }));
@@ -102,6 +142,8 @@ var endMarker = new ol.Feature({
   type: 'icon',
   geometry: new ol.geom.Point(routeCoords[routeLength - 1])
 });
+
+
 
 var styles = {
   'route': new ol.style.Style({
@@ -140,42 +182,10 @@ var vectorLayer = new ol.layer.Vector({
         }
       });
 
-     var map = new ol.Map({
-        layers: [
-           new ol.layer.Tile({
-            source: new ol.source.OSM()
-          }),
 
-            /*  gjsonFile,  */
-              vectorLayer
-        ],
-        target: 'map',
+map.addLayer(vectorLayer);
 
-        view: new ol.View({
-          center: ol.proj.fromLonLat([{{ long }}, {{ lat }}]),
-          zoom: 11,
-          maxZoom: 16
-        }),
-          controls: new ol.control.defaults({
-          attribution: false,
-         })
-      });
-
-       var source = new ol.source.Vector({
-        wrapX: false
-      });
-      var vector = new ol.layer.Vector({
-        source: source
-      });
-      map.addLayer(vector);
-
-     var x = parseFloat("{{ puntitox }}");
-     var y = parseFloat("{{ puntitoy }}");
-     var geom = new ol.geom.Point(ol.proj.transform([ y, x], 'EPSG:4326', 'EPSG:3857'));
-
-      var feature = new ol.Feature(geom);
-      source.addFeature(feature);
-
+      }
 
 } else {
 
