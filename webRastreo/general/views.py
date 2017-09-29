@@ -255,7 +255,7 @@ def CrearPointSeguimiento(usuarioTest):
     try:
         x = Location.objects.filter(email=usuarioTest)  #[0]
         cantidad = len(x)
-        x = x[cantidad -1]
+        x = x[cantidad -2]
         v = x.point.x
         b = x.point.y
         tres = []
