@@ -38,7 +38,7 @@ class Cuentas(models.Model):
     def __str__(self):
         return self.nombre
 
-class userProfile(models.Model):
+class userProfile(models.Model): #si se agrega o cambia algo aca chequear que tmbien son usados n el server y puede dejar de recibir datos
     user = models.OneToOneField(User, unique=True)
     Empresa = models.ManyToManyField(_empresas)
     Rubro = models.CharField(max_length=40, blank=True, null=True)
@@ -49,7 +49,7 @@ class userProfile(models.Model):
     Nombre_Contacto = models.CharField(max_length=30, blank=True, null=True)
     Abonos = models.CharField(max_length=4, blank=True, null=True)
     Descripcion_corta = models.TextField(max_length=500, null=True, blank=True)
-    Tipo_Cuenta = models.CharField(max_length=30, choices=_TipoCuenta, default='Individual', blank=True, null=True)
+    Tipo_Cuenta = models.CharField(max_length=30, choices=_TipoCuenta, default='Individual', blank=True, null=True) #dato usado tambien por server siempre en poscion 11
     Asociado_A_Cuenta = models.CharField(max_length=30, null=True, blank=True)
     creacion = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     Cuenta_Activa = models.BooleanField(default=False)
