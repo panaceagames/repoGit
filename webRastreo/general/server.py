@@ -22,9 +22,9 @@ class MiTcpHandler(socketserver.BaseRequestHandler):
             print("salto")
         cur = conn.cursor()
         print("dentro2")
-        print(coordinates)
+        horaActual= datetime.datetime.now()
         #CHEQUEAR PORQUE ME PIDIO EN LOS CAMPOS NUEVOS USAR "" LO ARREGLE CON LA \ PERO NO ESTA BIEN REHACER LA BASE DE DATOS DESPUES QUE TODO FUNCIONE A VER SI SE PUEDE PONER NORMAL
-        cur.execute("INSERT INTO general_location(name, point, bearing, altitud, speed, accuracy, email, fecha2, \"FinRecorrido\", \"InicioRecorrido\", imei) VALUES (%s, ST_GeomFromText(%s,4326),%s,%s,%s,%s,%s,%s,%s,%s,%s)", (final["numero"], coordinates, final["bearing"], final["altitude"], final["speed"], final["accuracy"], final["email"], final["fechas"], final["FinRecorrido"], final["InicioRecorrido"], final["imei"]))
+        cur.execute("INSERT INTO general_location(name, point, bearing, altitud, speed, accuracy, email, fecha2, \"FinRecorrido\", \"InicioRecorrido\", imei, \"horarioIngreso\") VALUES (%s, ST_GeomFromText(%s,4326),%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)", (final["numero"], coordinates, final["bearing"], final["altitude"], final["speed"], final["accuracy"], final["email"], final["fechas"], final["FinRecorrido"], final["InicioRecorrido"], final["imei"], horaActual))
         conn.commit()
         print("guardo")
 

@@ -19,6 +19,7 @@ class Location(models.Model):
     email = models.EmailField(max_length=60, blank=True, null=True)
     fecha2 = models.DateTimeField(blank=True, null=True)
     imei = models.CharField(max_length=30, null=True)
+    horarioIngreso = models.DateTimeField(auto_now_add=True, null=True, blank=True)
    # You MUST use GeoManager to make Geo Queries
     objects = models.GeoManager()
 

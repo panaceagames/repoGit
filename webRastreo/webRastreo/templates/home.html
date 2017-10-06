@@ -5,3 +5,69 @@
  hola
 
 {% endblock %}
+<script>
+/*
+
+{% extends "base.html" %}
+
+{% block title %} AFT {% endblock %}
+{% block content %}
+
+
+<script type="text/javascript">
+
+
+function init()
+{
+
+    var ttt = {{ lista2|safe }};
+    for (x=0; x<19; x++){
+    new Ajax.PeriodicalUpdater('userActivo', '/maps/userActivo/'+ttt[x], {
+        method: 'get',frequency:10.0,decay:1, onSuccess: function(id) {
+            console.log("dentro update")
+            var cor = id;
+            console.log(cor);
+            var lat = cor["responseJSON"][0];
+            console.log(lat);
+            var long = cor["responseJSON"][1];
+         /*   document.getElementById("estado").innerHTML = lat; */
+            console.log(lat, long);
+         /*   document.write(lat); */
+            return <p>"gohlhg"</p>;
+        }
+    });
+    }
+}
+
+</script>
+
+
+<H2>Lista Cuentas Asociadas:</H2>
+<table>
+    <tr>
+        <th class="tablas">   Empresa   </th> <th class="tablas">   Usuario   </th> <th class="tablas">   Tipo de Cuenta   </th> <th class="tablas">   Activa   </th> <th class="tablas">   Asociada   </th> <th class="tablas">   Email de Localizacion   </th>
+    </tr>
+    <tr>
+{% for x in lista %}
+    {% for empresa in x.Empresa.all %} {#  #}
+        <td class="tablas"><script> init() </script></td><td class="tablas">{{ empresa }}</td> <td class="tablas">{{ x.user }}</td> <td class="tablas">{{ x.Tipo_Cuenta }}</td> <td>{{ x.Cuenta_Activa }}</td> <td class="tablas">{{ x.Asociado_A_Cuenta }}</td> <td class="tablas">{{ x.user.email }}</td> <td><a class="btn btn-primary" href="/DatosPersonales/{{ x.id }}/"><i class="icon-pencil"></i>Ver</a></td>
+
+    {% endfor %}
+</tr>
+
+{% endfor %}
+</table>
+{% if mensaje != "." %}
+    {{ mensaje }}
+{% endif %}
+
+
+{% endblock %}
+
+
+
+
+
+
+
+ */</script>

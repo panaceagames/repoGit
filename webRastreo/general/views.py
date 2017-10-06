@@ -8,6 +8,7 @@ import json
 from clientes.models import userProfile
 import simplekml
 from django.contrib.gis.geos import Point
+import datetime
 # Create your views here.
 
 #MIRAR DISTINCT EN LOS FILTROS DE BUSQUEDA PARA PODER FILTRAR RESULTADOS CERCANOS EN EL ARMADO DE RUTA
@@ -289,3 +290,33 @@ def CuentaAsociadas(user): # no me toma el usuario creado con comandos nunca
             g = []
             g.append(UsuarioActual) #se retorna una lista para que pueda ser itinerante en la vista la mustra de los clientes
             return g
+
+def userActivo(request, lista):  #funcion para estimar que usuarios estan activos
+    if request.user.is_authenticated():
+        print(lista)
+        if (request.method == 'GET'):
+            print("dentro")
+            dato = chequearEnBaseActivo(lista)
+            dato1 = json.dumps(dato)
+        return HttpResponse(dato1, content_type='application/json')
+
+#Me parece muy ineficiente el uso de memoria y consulta porque puede llegar a traer demasiados datos REVISAR
+def chequearEnBaseActivo(usuarioTest): #busca ultimos reportes para chequear estados aprox segun tiempo
+    tres = []
+    try:
+        estado = True
+        horaActual = datetime.datetime.now()
+        x = Location.objects.filter(email=usuarioTest)
+        e = x.count()
+        fechass= x[e -1].fecha2
+        horaAcomparar = horaActual - datetime.timedelta(0,30)
+        if ((x[e -1].FinRecorrido == "SI") or (x[e-1].horarioIngreso <= horaAcomparar)):
+            estado = False
+        tres.append(str(fechass))
+        tres.append(estado)
+        tres.append(usuarioTest)
+    except:
+        tres.append("Nunca se Conecto")
+        tres.append(False)
+        tres.append(usuarioTest)
+    return tres

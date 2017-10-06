@@ -6,6 +6,8 @@ from django.http import HttpResponseRedirect
 from .forms import LoginForm, RegisterForm, editUserForm, editUserFormIndividuales, RegisterFormTarget, PasswordReset, FormEmpresas
 from .models import userProfile, _empresas
 from django.contrib.auth.models import User
+import json
+
 
 #loguea al usuario y redirige acorde a sus permisos el admin y solo users
 def login_view(request):
@@ -185,16 +187,45 @@ def ClientesGeneral_view(request):
             Cuentas = userProfile.objects.filter(Empresa=empre)
         #    Cuentas1 = Cuentas.filter(Asociado_A_Cuenta=request.user)
             Cuentas2 = Cuentas.exclude(Tipo_Cuenta="Cliente")
-            ctx = {"UsuarioActual": UsuarioActual, "mensaje": mensaje, "lista": Cuentas2, "empre":empre }
+            lista2 = [] #lista para chequear el estado solo contiene los mail
+            for x in range(len(Cuentas2)):
+                lista2.append(Cuentas2[x].user.email)
+            lista22 = json.dumps(lista2)
+            ctx = {"UsuarioActual": UsuarioActual, "mensaje": mensaje, "lista": Cuentas2, "empre":empre, "lista2": lista22 }
             return render(request, 'usuarios/ClientesGeneral.html', ctx)
         elif (UsuarioActual.Tipo_Cuenta == "Admin"):
                 lista = userProfile.objects.all()
-                ctx = {"lista": lista, "UsuarioActual": UsuarioActual, "mensaje": mensaje }
+                lista2 = [] #lista para chequear el estado solo contiene los mail
+                for x in range(len(lista)):
+                    lista2.append(lista[x].user.email)
+                lista22 = json.dumps(lista2)
+                ctx = {"lista": lista, "UsuarioActual": UsuarioActual, "mensaje": mensaje, "lista2": lista22 }
                 return render(request, 'usuarios/ClientesGeneral.html', ctx)
         else:
-            mensaje = "Este usuario no posee permisos para acceder a esta seccion"
-            ctx = {"UsuarioActual": UsuarioActual, "mensaje": mensaje }
-            return render(request, 'usuarios/ClientesGeneral.html', ctx)
+            if (UsuarioActual.Tipo_Cuenta == "Individual"):
+                Cuentas2 = []
+                Cuentas2.append(UsuarioActual)
+                empre = UsuarioActual.Empresa.all()[0]
+                lista2 = [] #lista para chequear el estado solo contiene los mail
+                lista2.append(Cuentas2[0].user.email)
+                lista22 = json.dumps(lista2)
+                ctx = {"UsuarioActual": UsuarioActual, "mensaje": mensaje, "lista": Cuentas2, "empre":empre, "lista2": lista22 }
+                return render(request, 'usuarios/ClientesGeneral.html', ctx)
+            elif (UsuarioActual.Tipo_Cuenta == "Chequeo"):
+                empre = UsuarioActual.Empresa.all()[0]
+                Cuentas = userProfile.objects.filter(Empresa=empre)
+                Cuentas1 = Cuentas.filter(Asociado_A_Cuenta=request.user)
+                Cuentas2 = Cuentas1.exclude(Tipo_Cuenta="Cliente")
+                lista2 = [] #lista para chequear el estado solo contiene los mail
+                for x in range(len(Cuentas2)):
+                    lista2.append(Cuentas2[x].user.email)
+                lista22 = json.dumps(lista2)
+                ctx = {"UsuarioActual": UsuarioActual, "mensaje": mensaje, "lista": Cuentas2, "empre":empre, "lista2": lista22 }
+                return render(request, 'usuarios/ClientesGeneral.html', ctx)
+            else:
+                mensaje = "Este usuario no posee permisos para acceder a esta seccion"
+                ctx = {"UsuarioActual": UsuarioActual, "mensaje": mensaje }
+                return render(request, 'usuarios/ClientesGeneral.html', ctx)
     else:
         return HttpResponseRedirect('/')
 
