@@ -50,3 +50,43 @@ article {
 input:focus {
     background-color: yellow;
 }
+/*
+.fondoGeneral {
+        background-image: url("/media/images/AFT3.png");
+        background-repeat: no-repeat;
+        position: absolute;
+        bottom: 0;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-attachment: fixed;
+        background-size: cover;
+    }
+
+
+
+
+.fondoGeneral {
+        height: 100%;
+        width: 100%;
+        background-image: url("/media/images/AFT3.png");
+        background-repeat: no-repeat;
+    }
+
+html, SECTION {
+    margin: 0px;
+    padding: 0px;
+    background-color: Aqua;
+    }
+
+
+body {
+
+        background-image: url("/media/images/AFT3.png");
+     background-position: center center;
+     background-repeat: no-repeat;
+     background-attachment: fixed;
+        background-size: cover;
+
+    }
+*/

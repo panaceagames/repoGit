@@ -8,11 +8,53 @@
         height: 700px;
         width: 100%;
       }
+    .popup {
+        position: absolute;
+        background-color: white;
+        -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+        filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #cccccc;
+        bottom: 12px;
+        left: -50px;
+        min-width: 280px;
+      }
+      .popup:after, .ol-popup:before {
+        top: 100%;
+        border: solid transparent;
+        content: " ";
+        height: 0;
+        width: 0;
+        position: absolute;
+        pointer-events: none;
+      }
+      .popup:after {
+        border-top-color: white;
+        border-width: 10px;
+        left: 48px;
+        margin-left: -10px;
+      }
+      .popup:before {
+        border-top-color: #cccccc;
+        border-width: 11px;
+        left: 48px;
+        margin-left: -11px;
+      }
+      .popup-closer {
+        text-decoration: none;
+        position: absolute;
+        top: 2px;
+        right: 8px;
+      }
+      .popup-closer:after {
+        content: "✖";
+      }
     </style>
 
-    <div id="map" class="map" ></div>
-    <script type="text/javascript">
+    <div id="map" class="map" ><div id="popup"></div></div>
 
+    <script type="text/javascript">
 
 
      var map = new ol.Map({
@@ -23,7 +65,7 @@
             /*  gjsonFile,
               vectorLayer */
         ],
-        target: 'map',
+        target: document.getElementById('map'),
         view: new ol.View({
           center: ol.proj.fromLonLat([{{ long }}, {{ lat }}]),
           zoom: 13,
@@ -36,7 +78,6 @@
         ]),
       });
 
-
        var source = new ol.source.Vector({
            wrapX: false
       });
@@ -47,23 +88,112 @@
 
 
 
-function updateMarkers(lat, long) {
+function updateMarkers(lat, long, grados, leyenda,estado) {
      var x = parseFloat(lat);
      var y = parseFloat(long);
+     var grad = parseFloat(grados);
+
+    if (estado == true) {
+         if (grados == 0){
+               ss = "/media/images/16471.png";
+         }
+         else {
+               ss = "/media/images/flecha.png";
+          }
+     } else {
+            ss = "/media/images/cruz.png";
+            }
+
+    source.clear();
 
      var feature1 = new ol.Feature({
-     geometry: new ol.geom.Point(ol.proj.transform([ y, x], 'EPSG:4326', 'EPSG:3857'))
+     geometry: new ol.geom.Point(ol.proj.transform([ y, x], 'EPSG:4326', 'EPSG:3857')),
+     name: leyenda,
+     population: 4000,
+     rainfall: 500
       });
 
         feature1.setStyle(new ol.style.Style({
                 image: new ol.style.Icon({
                 anchor: [0.5, 0.5],
-               src: "/media/images/16471.png"
+                rotateWithView: true,
+                rotation: (grad * (Math.PI / 180)),
+                src: ss,
+           //     size: [41, 45],
+             //   offset: [5, 5]
             })
             }));
 
+
      source.addFeature(feature1);
 
+}
+var $j = jQuery.noConflict();
+       var element = document.getElementById('popup');
+
+      var popup = new ol.Overlay({
+        element: element,
+        positioning: 'bottom-center',
+        stopEvent: false,
+        offset: [0, -50]
+      });
+      map.addOverlay(popup);
+
+      // display popup on click
+      map.on('click', function(evt) {
+        var feature = map.forEachFeatureAtPixel(evt.pixel,
+            function(feature) {
+              return feature;
+            });
+        if (feature) {
+          var coordinates = feature.getGeometry().getCoordinates();
+          popup.setPosition(coordinates);
+          $j(element).popover({
+            'placement': 'top',
+            'html': true,
+            'content': feature.get('name')
+          });
+          $j(element).popover('show');
+        } else {
+          $j(element).popover('destroy');
+        }
+      });
+
+      // change mouse cursor when over marker
+      map.on('pointermove', function(e) {
+        if (e.dragging) {
+          $j(element).popover('destroy');
+          return;
+        }
+        var pixel = map.getEventPixel(e.originalEvent);
+        var hit = map.hasFeatureAtPixel(pixel);
+        map.getTarget().style.cursor = hit ? 'pointer' : '';
+      });
+
+function init()
+{
+new Ajax.PeriodicalUpdater('dirtcount', '/maps/dirt_count/{{ lista }}', {
+        method: 'get',frequency:10.0,decay:1,onSuccess: function(id) {
+
+            var cor = id;
+            console.log(cor["responseText"]);
+            var lat = cor["responseJSON"][0][0];
+            var long = cor["responseJSON"][0][1];
+            var grados = cor["responseJSON"][0][2];
+            var direccion = cor["responseJSON"][0][3];
+            var usuario = cor["responseJSON"][0][4];
+            var estado = cor["responseJSON"][0][5];
+            var horario = cor["responseJSON"][0][6];
+
+            if (estado) {
+                    var leyenda = usuario+"\n"+lat+", "+long+"\n"+direccion+"\n"+horario;
+            } else
+                {
+                    var leyenda = usuario+"\n"+lat+", "+long+"\n"+direccion+"\n DESCONECTADO \n"+horario;
+                    }
+            updateMarkers(lat, long, grados, leyenda,estado);
+        }
+    });
 }
 
 /*
@@ -75,40 +205,9 @@ function updateMarkers(lat, long) {
     propertychange (ol.Object.Event) - Triggered when a property is changed.
     removefeature (ol.source.Vector.Event) - Triggered when a feature is removed from the source. See source.clear() for exceptions.
 
-
-function updateMarkers2(lat, long) {
-     var x = parseFloat(lat);
-     var y = parseFloat(long);
-     var geom = new ol.geom.Point(ol.proj.transform([ y, x], 'EPSG:4326', 'EPSG:3857'));
-
-     var feature = new ol.Feature(geom);
-
-     source.addFeature(feature);
-
-}
 */
 
-function init()
-{
-new Ajax.PeriodicalUpdater('dirtcount', '/maps/dirt_count/{{ lista }}', {
-        method: 'get',frequency:10.0,decay:1,onSuccess: function(id) {
-
-            var cor = id;
-            console.log(cor["responseText"]);
-            var lat = cor["responseJSON"][0][0];
-            var long = cor["responseJSON"][0][1];
-
-            updateMarkers(lat, long);
-        }
-    });
-}
-
-  /*           map.setView(new ol.View({
-                projection: 'EPSG:4326',
-                center: [long, lat], //long,lat
-                zoom: 8
-            })); */
-    </script>
+</script>
 
 
 {% endblock %}

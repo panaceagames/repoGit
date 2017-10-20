@@ -9,6 +9,8 @@ from clientes.models import userProfile
 import simplekml
 from django.contrib.gis.geos import Point
 import datetime
+from geopy.geocoders import Nominatim
+from django.contrib.auth.models import User
 # Create your views here.
 
 #MIRAR DISTINCT EN LOS FILTROS DE BUSQUEDA PARA PODER FILTRAR RESULTADOS CERCANOS EN EL ARMADO DE RUTA
@@ -25,7 +27,7 @@ def search(request):
                     datosss = form.cleaned_data  #me crea el diccionario de los datos del formulario
                     usuarioTrasar = lista[0]
                     datosListos = manipularDatosBusqueda(datosss, usuarioTrasar)
-                    datosListos1, distanciaTotal = CrearListaPoint(datosListos)
+                    datosListos1, distanciaTotal, listaPopupInicio = CrearListaPoint(datosListos)
                     if (datosListos1 != "Usuario no existe"): #chequeamos que el usuario existio en la base antes del polilyne
                         datosListos2 = []
                         for x in range(len(datosListos1)):
@@ -38,7 +40,6 @@ def search(request):
                                 if datosListos2[b] != "":
                                     m = m + datosListos2[b] + ","
                         datosListos2 = m
-                        print(datosListos2)
                     else: #enviamos en blanco si el user no existe entonces solo muestra el mapa y no error
                         datosListos2 = ""
                     user = request.user
@@ -52,7 +53,8 @@ def search(request):
                         y = ""
                     if datosss['Distancia'] == False:
                         distanciaTotal = "."
-                    ctx = {'form': form, "lista": lista, "long": x, "lat": y, "usuarioMostrado": usuarioTrasar, "mensaje": mensaje,  "dato": datosListos2, "distanciaTotal": distanciaTotal}
+                    datosUser = getDatosUserSearch(usuarioTrasar)
+                    ctx = {'form': form, "lista": lista, "datosUser": datosUser, "listaPopupInicio": listaPopupInicio, "long": x, "lat": y, "usuarioMostrado": usuarioTrasar, "mensaje": mensaje,  "dato": datosListos2, "distanciaTotal": distanciaTotal}
                     return render(request,'search.html', ctx)
                 else:
                     user = request.user
@@ -74,7 +76,6 @@ def search(request):
             return render(request, 'search.html', ctx)
     else:
         return HttpResponseRedirect('/')
-
 
 def manipularDatosBusqueda(DicFormulario, usuarioTrasar):
     diaInicio = DicFormulario['diaInicio']
@@ -100,22 +101,24 @@ def CrearListaPoint(datosListos): #trae los puntos para el polyline y suma la di
     distance22 = 0 #control de cuenta kilometros
     distanciatotal = 0
     lista = [] #lista a devolver con los recorridos
+    listaPopupInicio = []
     try:
         traso = Location.objects.filter(email=datosListos["Cuenta"])
         traso1 = traso.filter(fecha2__gte=datosListos["inicial"])
         traso2 = traso1.filter(fecha2__lte=datosListos["finales"])
         corteInicio = traso2.filter(InicioRecorrido="SI")
         corteFin = traso2.filter(FinRecorrido="SI")
-        if (len(corteInicio) == len(corteFin)):  #Caso perdecto mismos inicios que finales marcados
+        if (len(corteInicio) == len(corteFin)):  #Caso perfecto mismos inicios que finales marcados
             for m in range(len(corteInicio)):
                 try:
-                    recorridos = traso2.filter(fecha2__gt=corteInicio[m].fecha2)
+                    recorridos = traso2.filter(fecha2__gt=corteInicio[m].fecha2) #filtro desde cada inicio
            #         print(corteInicio[m].fecha2)
-                    traso3 = recorridos.filter(fecha2__lt=corteFin[m].fecha2)
+                    traso3 = recorridos.filter(fecha2__lt=corteFin[m].fecha2) #termino el filtro con cada final
                     tres = [] #para guardas cada recorrido antes de pasarlo a la lista
                     v = traso3[0].point.x
                     b = traso3[0].point.y
                     p1 = Point(v, b)
+                    listaPopupInicio.append(traso3[0])
                     for x in traso3:
                         v = x.point.x
                         b = x.point.y
@@ -127,20 +130,24 @@ def CrearListaPoint(datosListos): #trae los puntos para el polyline y suma la di
                             p1 = Point(v, b)
                             distance22 = 0
                         distance22= distance22 +1
-                    distanciatotal = distanciatotal * 100
-                    kml1.newlinestring(name="AFTrakers", description="--", coords=hh)
-                    kml1.save(datosListos["Cuenta"]+".kml")
+                    listaPopupInicio.append(x)
                     lista.append(tres)
                 except:
                     continue
+            kml1.newlinestring(name="AFTrakers", description="--", coords=hh)
+            kml1.save(datosListos["Cuenta"]+".kml")
         else:
             if (len(corteInicio) != len(corteFin)): #casos especiales mas inicios que fin, puede quedar sin baterio o cualquier cosa que no deja
                 #marcar el fin del recorrido cortando el recorrido de inicio a inicio sin contar los finales
                 datos = traso2.filter(fecha2__gt=corteInicio[0].fecha2) #cargamos desde el primer dato de corte
                 tres = [] #para guardas cada recorrido antes de pasarlo a la lista
                 primero = True
+                checkPop = True
                 for m in range(len(datos)):
                     if ((datos[m].InicioRecorrido != "SI") and (datos[m].FinRecorrido != "SI")):
+                        if checkPop:
+                            listaPopupInicio.append(datos[m])
+                            checkPop = False
                         v = datos[m].point.x
                         b = datos[m].point.y
                         if primero:
@@ -157,32 +164,36 @@ def CrearListaPoint(datosListos): #trae los puntos para el polyline y suma la di
                     else:
                         if datos[m].InicioRecorrido == "SI":
                             primero = True
-                            distanciatotal = distanciatotal * 100
-                            kml1.newlinestring(name="AFTrakers", description="--", coords=hh)
-                            kml1.save(datosListos["Cuenta"]+".kml")
                             if tres != []: #es porque si hay un inicio y fin juntos no me genere una entrada vacia y de error
                                 lista.append(tres)
+                                if (datos[m - 1].FinRecorrido == "SI"):
+                                    listaPopupInicio.append(datos[m - 2])
+                                    checkPop = True
+                                else:
+                                    listaPopupInicio.append(datos[m - 1])
+                                    checkPop = True
                             tres = []
     #chequeamos el ultimo dato si se corto con un fin o se desconecto o simplemente continio a un rango mayor lo corta en el criterio de busqueda
                 if ((datos[len(datos)-1].FinRecorrido == "SI") or (datos[len(datos)-1].InicioRecorrido == "ContI")):
-                    distanciatotal = distanciatotal * 100
-                    kml1.newlinestring(name="AFTrakers", description="--", coords=hh)
-                    kml1.save(datosListos["Cuenta"]+".kml")
                     lista.append(tres)
+                kml1.newlinestring(name="AFTrakers", description="--", coords=hh)
+                kml1.save(datosListos["Cuenta"]+".kml")
             else:
                 lista = "Usuario no existe 2"
                 print("no coninciden las aperturas con los cierres")
     except:
         lista = "Usuario no existe"
         distanciatotal = 0
-    return lista, distanciatotal
-
+    distanciatotal = distanciatotal * 100
+    return lista, distanciatotal, listaPopupInicio
 
 def CrearPointSeguimientoSearch(usuarioTest): #solo lo usa marcado de ruta para darle el zoom inicial
     try:
         x = Location.objects.filter(email=usuarioTest)  #[0]
-        cantidad = len(x)
-        x = x[cantidad -2]
+        cantidad = len(x) -1
+        while ((x[cantidad].InicioRecorrido == "SI") or (x[cantidad].FinRecorrido == "SI")):
+            cantidad -= 1
+        x = x[cantidad]
         v = x.point.x
         b = x.point.y
         tres = []
@@ -210,6 +221,10 @@ def CrearPolyline(tres):
         ff = ""
     return ff
 
+def getDatosUserSearch(usuario):
+    datos = User.objects.get(email=usuario)
+    RestoDatos = userProfile.objects.get(user=datos)
+    return RestoDatos
 
 def Seguimiento_view(request): #muestra la lista de posibles cuentas a localizar en vivo
     mensaje = "."
@@ -225,12 +240,15 @@ def Seguimiento_view(request): #muestra la lista de posibles cuentas a localizar
             else:
                 if (len(lista) != 0):
                     lista = lista[0]
-                    datosIniciales = CrearPointSeguimiento(lista) #da los datos para el zoom inicial
+                    datosIniciales = ChequeaSiNoSeConecto(lista) #da los datos para el zoom inicial
                     try: #chequeamos si es nuevo usuario y nunca a reportado salta la exception con el mensaje
                         y = datosIniciales[0][0]
                         x = datosIniciales[0][1]
                     except:
-                        mensaje= "El usuario no a reportado"
+                        if datosIniciales == "NO":
+                            mensaje =  "El Usuario no esta conectado" #esto es por si no esta reportando
+                        else:
+                            mensaje= "El usuario no a reportado" #esto es por su nunca se conecto(cliente nuevo)
                         user = request.user
                         lista = CuentaAsociadas(user)
                         ctx = {"lista": lista, "mensaje": mensaje }
@@ -244,19 +262,14 @@ def Seguimiento_view(request): #muestra la lista de posibles cuentas a localizar
     else:
         return HttpResponseRedirect('/')
 
-def dirt_count(request, lista):  #funcion para el restreo en vivo de un user la usa JScript
-    if request.user.is_authenticated():
-        if (request.method == 'GET'):
-            print("dentro")
-            dato = CrearPointSeguimiento(lista)
-            dato1 = json.dumps(dato)
-        return HttpResponse(dato1, content_type='application/json')
-
-def CrearPointSeguimiento(usuarioTest):
+def ChequeaSiNoSeConecto(usuarioTest):
     try:
         x = Location.objects.filter(email=usuarioTest)  #[0]
-        cantidad = len(x)
-        x = x[cantidad -2]
+        cantidad = len(x) -1
+        if ((x[cantidad].InicioRecorrido == "SI") or (x[cantidad].FinRecorrido == "SI")):
+            tres = "NO"
+            return tres
+        x = x[cantidad]
         v = x.point.x
         b = x.point.y
         tres = []
@@ -265,9 +278,51 @@ def CrearPointSeguimiento(usuarioTest):
         tres = "Usuario no existe"
     return tres
 
+def dirt_count(request, lista):  #funcion para el restreo en vivo de un user la usa JScript
+    if request.user.is_authenticated():
+        if (request.method == 'GET'):
+            dato = CrearPointSeguimiento(lista)
+            dato1 = json.dumps(dato)
+        return HttpResponse(dato1, content_type='application/json')
+
+def darUbicacion(v,b): #tiene el try porque no siempre da la localizacion o se para de darla
+    try:
+        geolocator = Nominatim(scheme='http')
+        location = geolocator.reverse((v,b),timeout=10)
+        datos = location.address
+        return datos
+    except:
+        return "Buscando Ubicacion..."
+
+def CrearPointSeguimiento(usuarioTest):
+    try:
+        x = Location.objects.filter(email=usuarioTest)  #[0]
+        usuario = User.objects.get(email=usuarioTest)
+        numeroBusqueda = 0
+        cantidad = len(x) -1
+        estado = True  #chequiamos si se desconecta se pone en falsa y la vista cambia el icono de desconectado
+        horaActual = datetime.datetime.now()
+        horaAcomparar = horaActual - datetime.timedelta(0,30)
+        if ((x[cantidad].FinRecorrido == "SI") or (x[cantidad].horarioIngreso <= horaAcomparar)):
+            estado = False
+        while ((x[cantidad].InicioRecorrido == "SI") or (x[cantidad].FinRecorrido == "SI")):
+            numeroBusqueda += 1
+            cantidad = cantidad - numeroBusqueda
+        x = x[cantidad]
+        v = x.point.x
+        b = x.point.y
+        berin = x.bearing #angulo para darle la direccion
+        ubicacion = darUbicacion(v,b)
+        horario = x.fecha2.strftime("%Y-%m-%d %H:%M:%S")
+        print(horario)
+        tres = []
+        tres.append((v, b, berin, ubicacion, usuario.username,estado, horario ))
+    except:
+        tres = "Usuario no existe"
+    return tres
+
 def CuentaAsociadas(user): # no me toma el usuario creado con comandos nunca
     UsuarioActual = userProfile.objects.get(user=user)
-    print (UsuarioActual.Tipo_Cuenta)
     if (UsuarioActual.Tipo_Cuenta == "Admin"):
         lista = userProfile.objects.all()
         return lista
