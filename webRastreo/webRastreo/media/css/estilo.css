@@ -1,6 +1,8 @@
 @charset "UTF-8";
 /* CSS Document */
 
+
+
 .ocultos {
     background-color: SkyBlue;
 
@@ -90,3 +92,54 @@ body {
 
     }
 */
+
+
+.menu {
+    width: 2.2rem;
+    height: 4.7rem;
+    background: #141716;
+    border-radius: 0.5rem;
+    position: absolute;
+    top: 50%;
+    left: 1%;
+    color: white;
+    text-align: center;
+    transition: left 0.7s;
+    z-index: 68;
+    }
+
+.checkbox:checked ~ .menu {
+    left: 40%;
+    border-radius: 0 0.5rem 0.5rem 0;
+    }
+
+.ocultos1 {
+    width: 40%;
+    height: 100%;
+    background: -webkit-linear-gradient(#54BBC7, #2EE3AD, #9191f2);
+    background: -o-linear-gradient(#54BBC7, #2EE3AD, #9191f2);
+    background: linear-gradient(#54BBC7, #2EE3AD, #9191f2);
+    position: absolute;
+    top: 0;
+    left: -39%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 68;
+    transition: left 0.4s;
+    }
+
+.checkbox:checked ~ .ocultos1 {
+    left: 0;
+    }
+
+
+#check {
+    display: none;
+    }
+
+.aviso {
+    padding: 10px;
+    text-align: center;
+    color: Red;
+    }

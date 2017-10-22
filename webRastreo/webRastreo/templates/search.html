@@ -5,13 +5,24 @@
 
 {% block content %}
 
-{% if mensaje != "." %}
-    {{ mensaje }}
-{% endif %}
 
-<div class="ocultos">
+
+<input type="checkbox" class="checkbox" id="check">
+<label class="menu" for="check">|||</label>
+
+
+
+<div class="ocultos1">
+
+
 <form method="POST" action="."  enctype="multipart/form-data">
   {% csrf_token %}
+
+    <div class="aviso">
+        {% if mensaje != "." %}
+            {{ mensaje }}
+        {% endif %}
+    </div>
 
               {% for x in lista %}
                    <div>   {{ x.user }} : <input type="radio" name="checkbox"  value="{{ x.user.email }}"> Localizar</div><br>
@@ -29,7 +40,9 @@
             {% endif %}
 
   <input type="submit" value="To Show" />
-
+    <input type="button" value="Print Page" onClick="window.print()">
+       <input type="button" value="Save KML" onClick="llamarkml()">
+        <a id="export-png" class="btn btn-default"><i class="fa fa-download"></i> Download PNG</a>
 </form>
 
 </div>
@@ -51,21 +64,14 @@
         top: 3em;
       }
       .map {
-        height: 700px;
+        height: 100%;
         width: 100%;
       }
     </style>
 
     <div id="map" class="map"><div id="popup"></div></div>
 
-<form>
-    <input type="button" value="Print Page" onClick="window.print()">
-</form>
-<form>
-    <input type="button" value="Save KML" onClick="llamarkml()">
-</form>
-    <a id="export-png" class="btn btn-default"><i class="fa fa-download"></i> Download PNG</a>
-<div class="imagenMenu"></div>
+
 
 <script type="text/javascript">
     var puntos = []; //datos para el popup

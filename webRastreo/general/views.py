@@ -62,7 +62,7 @@ def search(request):
                     ctx = {'form': form, "lista": lista, "mensaje": mensaje,  "distanciaTotal": distanciaTotal}
                     return render(request, 'search.html', ctx)
             else:
-                mensaje = "A seleccionado mas 1 o ningun usuario, Por favor solo marque uno"
+                mensaje = "No a marcado ninguna cuenta. Por favor marque una"
                 user = request.user
                 lista = CuentaAsociadas(user)
                 ctx = {'form': form, "lista": lista, "mensaje": mensaje,  "distanciaTotal": distanciaTotal}
@@ -131,7 +131,8 @@ def CrearListaPoint(datosListos): #trae los puntos para el polyline y suma la di
                             distance22 = 0
                         distance22= distance22 +1
                     listaPopupInicio.append(x)
-                    lista.append(tres)
+                    if tres != []:
+                        lista.append(tres)
                 except:
                     continue
             kml1.newlinestring(name="AFTrakers", description="--", coords=hh)
@@ -175,7 +176,8 @@ def CrearListaPoint(datosListos): #trae los puntos para el polyline y suma la di
                             tres = []
     #chequeamos el ultimo dato si se corto con un fin o se desconecto o simplemente continio a un rango mayor lo corta en el criterio de busqueda
                 if ((datos[len(datos)-1].FinRecorrido == "SI") or (datos[len(datos)-1].InicioRecorrido == "ContI")):
-                    lista.append(tres)
+                    if tres != []:
+                        lista.append(tres)
                 kml1.newlinestring(name="AFTrakers", description="--", coords=hh)
                 kml1.save(datosListos["Cuenta"]+".kml")
             else:
