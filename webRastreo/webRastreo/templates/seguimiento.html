@@ -8,51 +8,13 @@
         height: 700px;
         width: 100%;
       }
-    .popup {
-        position: absolute;
-        background-color: white;
-        -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
-        filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
-        padding: 15px;
-        border-radius: 10px;
-        border: 1px solid #cccccc;
-        bottom: 12px;
-        left: -50px;
-        min-width: 280px;
-      }
-      .popup:after, .ol-popup:before {
-        top: 100%;
-        border: solid transparent;
-        content: " ";
-        height: 0;
-        width: 0;
-        position: absolute;
-        pointer-events: none;
-      }
-      .popup:after {
-        border-top-color: white;
-        border-width: 10px;
-        left: 48px;
-        margin-left: -10px;
-      }
-      .popup:before {
-        border-top-color: #cccccc;
-        border-width: 11px;
-        left: 48px;
-        margin-left: -11px;
-      }
-      .popup-closer {
-        text-decoration: none;
-        position: absolute;
-        top: 2px;
-        right: 8px;
-      }
-      .popup-closer:after {
-        content: "✖";
-      }
+    .nue-popup {
+        width: 300px;
+}
+
     </style>
 
-    <div id="map" class="map" ><div id="popup"></div></div>
+    <div id="map" class="map" ><div id="popup" class="nue-popup"></div></div>
 
     <script type="text/javascript">
 
@@ -184,12 +146,19 @@ new Ajax.PeriodicalUpdater('dirtcount', '/maps/dirt_count/{{ lista }}', {
             var usuario = cor["responseJSON"][0][4];
             var estado = cor["responseJSON"][0][5];
             var horario = cor["responseJSON"][0][6];
+            var speed = cor["responseJSON"][0][7];
+            var altitud = cor["responseJSON"][0][8];
 
             if (estado) {
-                    var leyenda = usuario+"\n"+lat+", "+long+"\n"+direccion+"\n"+horario;
+                if (altitud < 150) {
+                    var leyenda = "<strong>Usuario: </strong>"+usuario+".<br> <strong>Lat: </strong>"+lat+".<br><strong>Lon: </strong>"+long+".<br><strong>Velocidad: </strong>"+speed+".<br><strong>Ubicacion Aprox.: </strong>"+direccion+".<br><strong>Fecha: </strong>"+horario;
+                    }
+                else {
+                    var leyenda = "<strong>Usuario: </strong>"+usuario+".<br> <strong>Lat: </strong>"+lat+".<br><strong>Lon: </strong>"+long+".<br><strong>Velocidad: </strong>"+speed+".<br><strong>Altitud: </strong>"+altitud+".<br><strong>Rumbo: </strong>"+grados+".<br><strong>Ubicacion Aprox.: </strong>"+direccion+".<br><strong>Fecha: </strong>"+horario;
+                    }
             } else
                 {
-                    var leyenda = usuario+"\n"+lat+", "+long+"\n"+direccion+"\n DESCONECTADO \n"+horario;
+                    var leyenda = "<strong>Usuario: </strong>"+usuario+".<br><strong>Lat: </strong>"+lat+".<br><strong>Lon: </strong>"+long+".<br><strong>Ubicacion Aprox.: </strong>"+direccion+".<br><strong style=\"color:red;\">DESCONECTADO.</strong><br><strong>Ultima Conexion: </strong>"+horario;
                     }
             updateMarkers(lat, long, grados, leyenda,estado);
         }

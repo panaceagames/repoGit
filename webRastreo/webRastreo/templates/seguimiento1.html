@@ -3,11 +3,14 @@
 {% block title %} Track on-line {% endblock %}
 {% block content %}
 
+
+<center>
+
+<div style="color:red;">
 {% if mensaje != "." %}
     {{ mensaje }}
 {% endif %}
-
-
+</div>
 
 <form method="POST" action="">
   {% csrf_token %}
@@ -25,5 +28,5 @@
     </div>
   <input type="submit" value="Localizar On-Line" />
 </form>
-
+</center>
 {% endblock %}

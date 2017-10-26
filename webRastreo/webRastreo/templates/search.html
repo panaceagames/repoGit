@@ -67,9 +67,12 @@
         height: 100%;
         width: 100%;
       }
+    .nue-popup {
+        width: 300px;
+        }
     </style>
 
-    <div id="map" class="map"><div id="popup"></div></div>
+    <div id="map" class="map"><div id="popup" class="nue-popup"></div></div>
 
 
 
@@ -119,7 +122,6 @@ if(datos !== "" ) {
 
 for (var f = 0; f < uno.length; f++) {
     var control = f *2;
-    console.log(control);
 var route = /** @type {ol.geom.LineString} */ (new ol.format.Polyline({
         factor: 1e5
       }).readGeometry( uno[f], {
@@ -175,17 +177,27 @@ var styles = {
 };
 //para poner los datos de popup correctos
 function ubicacion(puntos, f) {
+    try{
         var y = puntos[f][1];
         var x = puntos[f][2];
-        var salida = puntos[f][0]+"\n "+puntos[f][3]+"\n lat:"+y+"\n Lon:"+x;
+        var salida = "<strong>Usuario: </strong>"+puntos[f][0]+".<br><strong>Fecha: </strong>"+puntos[f][3]+".<br><strong>Lat: </strong>"+y+".<br><strong>Lon: </strong>"+x;
         return salida;
+        }
+    catch(error){
+        console.log(error.message);
+        }
         }
 
 function ubicacion2(puntos, f) {
+    try{
         var y = puntos[f +1][1];
         var x = puntos[f +1][2];
-        var salida = puntos[f +1][0]+"\n "+puntos[f+1][3]+"\n lat:"+y+"\n Lon:"+x;
+        var salida = "<strong>Usuario: </strong>"+puntos[f +1][0]+".<br><strong>Fecha: </strong>"+puntos[f +1][3]+".<br><strong>Lat: </strong>"+y+".<br><strong>Lon: </strong>"+x;
         return salida;
+        }
+    catch(error){
+        console.log(error.message);
+        }
         }
 
 var vectorLayer = new ol.layer.Vector({
@@ -335,13 +347,11 @@ var $j = jQuery.noConflict();
 
       // change mouse cursor when over marker
       map.on('pointermove', function(e) {
-        if (e.dragging) {
-          $j(element).popover('destroy');
-          return;
-        }
+
         var pixel = map.getEventPixel(e.originalEvent);
         var hit = map.hasFeatureAtPixel(pixel);
         map.getTarget().style.cursor = hit ? 'pointer' : '';
+        $j(element).popover('destroy');
       });
 
     </script>

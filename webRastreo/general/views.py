@@ -291,7 +291,9 @@ def darUbicacion(v,b): #tiene el try porque no siempre da la localizacion o se p
     try:
         geolocator = Nominatim(scheme='http')
         location = geolocator.reverse((v,b),timeout=10)
-        datos = location.address
+        dato = location[0].split(",")
+        cantidad = len(dato)
+        datos = dato[1:cantidad] #esto es para sacar la referencia de lugares de openstreetmap
         return datos
     except:
         return "Buscando Ubicacion..."
@@ -314,11 +316,12 @@ def CrearPointSeguimiento(usuarioTest):
         v = x.point.x
         b = x.point.y
         berin = x.bearing #angulo para darle la direccion
+        speed = x.speed
+        altitud = x.altitud
         ubicacion = darUbicacion(v,b)
         horario = x.fecha2.strftime("%Y-%m-%d %H:%M:%S")
-        print(horario)
         tres = []
-        tres.append((v, b, berin, ubicacion, usuario.username,estado, horario ))
+        tres.append((v, b, berin, ubicacion, usuario.username,estado, horario, speed, altitud))
     except:
         tres = "Usuario no existe"
     return tres
