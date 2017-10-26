@@ -31,22 +31,24 @@ function init(usuario)
 
 </script>
 
+<center>
+    <H2>Lista Cuentas Asociadas</H2>
+    <table>
+        <tr>
+            <th class="tablas">   Empresa   </th> <th class="tablas">   Usuario   </th> <th class="tablas">   Tipo de Cuenta   </th> <th class="tablas">   Activa   </th> <th class="tablas">   Asociada   </th> <th class="tablas">   Email de Localizacion   </th> <th class="tablas">  Ultima Conexion  </th>
+        </tr>
+        <tr>
+            {% for x in lista %}
+                {% for empresa in x.Empresa.all %}
+                    <td class="tablas">{{ empresa }}</td> <td class="tablas">{{ x.user }}</td> <td class="tablas">{{ x.Tipo_Cuenta }}</td> <td>{{ x.Cuenta_Activa }}</td> <td class="tablas">{{ x.Asociado_A_Cuenta }}</td> <td class="tablas">{{ x.user.email }}</td> <td class="tablas"><script> init('{{x.user.email}}'); </script><div id="{{x.user.email}}"></div></td><td><a class="btn btn-primary" href="/DatosPersonales/{{ x.id }}/"><i class="icon-pencil"></i>Ver</a></td>
 
-<H2>Lista Cuentas Asociadas:</H2>
-<table>
-    <tr>
-        <th class="tablas">   Empresa   </th> <th class="tablas">   Usuario   </th> <th class="tablas">   Tipo de Cuenta   </th> <th class="tablas">   Activa   </th> <th class="tablas">   Asociada   </th> <th class="tablas">   Email de Localizacion   </th> <th class="tablas">  Ultima Conexion  </th>
-    </tr>
-    <tr>
-{% for x in lista %}
-    {% for empresa in x.Empresa.all %}
-        <td class="tablas">{{ empresa }}</td> <td class="tablas">{{ x.user }}</td> <td class="tablas">{{ x.Tipo_Cuenta }}</td> <td>{{ x.Cuenta_Activa }}</td> <td class="tablas">{{ x.Asociado_A_Cuenta }}</td> <td class="tablas">{{ x.user.email }}</td> <td class="tablas"><script> init('{{x.user.email}}'); </script><div id="{{x.user.email}}"></div></td><td><a class="btn btn-primary" href="/DatosPersonales/{{ x.id }}/"><i class="icon-pencil"></i>Ver</a></td>
+                {% endfor %}
+        </tr>
 
-    {% endfor %}
-</tr>
+            {% endfor %}
+    </table>
+</center>
 
-{% endfor %}
-</table>
 {% if mensaje != "." %}
     {{ mensaje }}
 {% endif %}
